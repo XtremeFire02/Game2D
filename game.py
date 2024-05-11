@@ -622,7 +622,7 @@ class Game(ConnectionListener):
         max_x = start_x + (width // 2) + 50
 
         # Draw vertical lines
-        for x in range(min_x, max_x, 50):
+        for x in range(min_x - 500, max_x + 500, 50):
             pygame.draw.line(
                 screen,
                 GRAY,
@@ -631,7 +631,7 @@ class Game(ConnectionListener):
             )
 
         # Draw horizontal lines
-        for y in range(start_y - 500, start_y + 500, 50):
+        for y in range(start_y - 1000, start_y + 1000, 50):
             pygame.draw.line(
                 screen,
                 GRAY,
