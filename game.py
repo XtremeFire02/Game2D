@@ -53,7 +53,7 @@ class Player(GameObject):
         super().draw(screen, offset_x, offset_y)
         name_text = font.render(self.name, True, BLACK)
         name_rect = name_text.get_rect(
-            center=(int(self.x - offset_x), int(self.y - offset_y - self.size - 10))
+            center=(int(self.x - offset_x + self.size//2), int(self.y - offset_y - self.size - 10))
         )
         screen.blit(name_text, name_rect)
 
