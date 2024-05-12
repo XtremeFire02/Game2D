@@ -649,6 +649,7 @@ class Game(ConnectionListener):
         self.players = [
             Player(p["x"], p["y"], PLAYER_SIZE, RED, 300, p["name"], Money())
             for p in game_state["players"]
+            if p["name"] != self.player.name
         ]
         self.enemy.x = game_state["enemy"]["x"]
         self.enemy.y = game_state["enemy"]["y"]
