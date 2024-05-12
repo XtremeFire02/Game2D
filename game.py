@@ -26,8 +26,8 @@ GRAY = (200, 200, 200)
 font = pygame.font.Font(None, 36)
 
 # Define size constants
-PLAYER_SIZE = 40
-ENEMY_SIZE = 40
+PLAYER_SIZE = 60
+ENEMY_SIZE = 60
 
 
 class GameObject:
@@ -55,7 +55,7 @@ class Player(GameObject):
         super().draw(screen, offset_x, offset_y)
         name_text = font.render(self.name, True, BLACK)
         name_rect = name_text.get_rect(
-            center=(int(self.x - offset_x + self.size//2), int(self.y - offset_y - self.size - 10))
+            center=(int(self.x - offset_x + self.size//2), int(self.y - offset_y - 10))
         )
         screen.blit(name_text, name_rect)
 

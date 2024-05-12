@@ -12,8 +12,8 @@ BLACK = (0, 0, 0)
 GRAY = (200, 200, 200)
 
 # Define size constants
-PLAYER_SIZE = 40
-ENEMY_SIZE = 40
+PLAYER_SIZE = 60
+ENEMY_SIZE = 60
 
 
 class ClientChannel(Channel):
