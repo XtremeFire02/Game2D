@@ -27,24 +27,22 @@ font = pygame.font.Font(None, 36)
 
 
 class GameObject:
-    def __init__(self, x, y, size, color, speed):
+    def __init__(self, x, y, size, color, speed, sprite_path="resources/null.png"):
         self.x = x
         self.y = y
         self.size = size
         self.color = color
         self.speed = speed
+        self.sprite = pygame.image.load(sprite_path).convert_alpha()
+        self.sprite = pygame.transform.scale(self.sprite, (size, size))
 
     def draw(self, screen, offset_x, offset_y):
-        pygame.draw.rect(
-            screen,
-            self.color,
-            (int(self.x - offset_x), int(self.y - offset_y), self.size, self.size),
-        )
+        screen.blit(self.sprite, (int(self.x - offset_x), int(self.y - offset_y)))
 
 
 class Player(GameObject):
     def __init__(self, x, y, size, color, speed, name, money):
-        super().__init__(x, y, size, color, speed)
+        super().__init__(x, y, size, color, speed, "resources/player.png")
         self.name = str(name) if name else ""
         self.has_laser_beam = False
         self.money = money
@@ -76,7 +74,7 @@ class Player(GameObject):
 
 class Enemy(GameObject):
     def __init__(self, x, y, size, color, speed, minimap_radius):
-        super().__init__(x, y, size, color, speed)
+        super().__init__(x, y, size, color, speed, "resources/player.png")
         self.hit_count = 0
         self.hit_timer = 0
         self.minimap_radius = minimap_radius
@@ -244,6 +242,14 @@ class Projectile(GameObject):
         self.x += self.velocity[0] * dt
         self.y += self.velocity[1] * dt
         return
+
+    def draw(self, screen, offset_x, offset_y):
+        pygame.draw.rect(
+            screen,
+            self.color,
+            (int(self.x - offset_x), int(self.y - offset_y), self.size, self.size),
+        )
+
 
 
 class Money:
