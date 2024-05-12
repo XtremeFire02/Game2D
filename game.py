@@ -351,11 +351,11 @@ class ChatBox:
 
         # Get the last max_lines lines from the chat log
         recent_lines = lines[-max_lines:]
-        y = self.y + 10
-        for line in recent_lines:
+        y = self.y + self.height - input_height - 20
+        for line in reversed(recent_lines):
             text_surface = self.font.render(line, True, self.text_color)
             screen.blit(text_surface, (self.x + 10, y))
-            y += self.font.get_height()
+            y -= self.font.get_height()
 
         # Draw input bar
         input_width = self.width - 20
@@ -427,6 +427,7 @@ class ChatBox:
                     game.chat_active = False
                     self.typing_indicator = ""
                     self.height = self.inactive_height
+                    self.y = height - self.inactive_height
                 elif event.key == pygame.K_BACKSPACE:
                     self.input_text = self.input_text[:-1]
                 else:
@@ -437,6 +438,7 @@ class ChatBox:
                 game.chat_active = True
                 self.typing_indicator = "_"
                 self.height = self.active_height
+                self.y = height - self.active_height
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if not (
                 self.x < event.pos[0] < self.x + self.width
@@ -446,6 +448,7 @@ class ChatBox:
                 game.chat_active = False
                 self.typing_indicator = ""
                 self.height = self.inactive_height
+                self.y = height - self.inactive_height
 
 
 class Game(ConnectionListener):
