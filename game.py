@@ -26,8 +26,8 @@ GRAY = (200, 200, 200)
 font = pygame.font.Font(None, 36)
 
 # Define size constants
-PLAYER_SIZE = 60
-ENEMY_SIZE = 60
+PLAYER_SIZE = 100
+ENEMY_SIZE = 100
 
 
 class GameObject:
