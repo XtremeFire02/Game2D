@@ -31,22 +31,58 @@ ENEMY_SIZE = 100
 
 
 class GameObject:
-    def __init__(self, x, y, size, color, speed, sprite_path="resources/null.png"):
+    def __init__(self, x, y, size, color, speed, sprite_path=None, frame_images=None):
         self.x = x
         self.y = y
         self.size = size
         self.color = color
         self.speed = speed
-        self.sprite = pygame.image.load(sprite_path).convert_alpha()
-        self.sprite = pygame.transform.scale(self.sprite, (size, size))
+        self.sprite_path = sprite_path
+        self.frame_images = frame_images
+        self.animation_frames = []
+        self.current_frame = 0
+        self.animation_speed = 1
+        self.elapsed_time = 0
+
+        if self.sprite_path:
+            self.sprite = pygame.image.load(sprite_path).convert_alpha()
+            self.sprite = pygame.transform.scale(self.sprite, (size, size))
+        elif self.frame_images:
+            for frame_image in self.frame_images:
+                loaded_image = pygame.image.load(frame_image).convert_alpha()
+                scaled_image = pygame.transform.scale(loaded_image, (size, size))
+                self.animation_frames.append(scaled_image)
 
     def draw(self, screen, offset_x, offset_y):
-        screen.blit(self.sprite, (int(self.x - offset_x), int(self.y - offset_y)))
+        if self.sprite_path:
+            screen.blit(self.sprite, (int(self.x - offset_x), int(self.y - offset_y)))
+        elif self.frame_images:
+            current_frame_image = self.animation_frames[self.current_frame]
+            screen.blit(
+                current_frame_image, (int(self.x - offset_x), int(self.y - offset_y))
+            )
+
+    def update(self, dt):
+        if self.frame_images:
+            self.elapsed_time += dt
+            if self.elapsed_time >= self.animation_speed:
+                self.current_frame = (self.current_frame + 1) % len(
+                    self.animation_frames
+                )
+                self.elapsed_time = 0
 
 
 class Player(GameObject):
     def __init__(self, x, y, size, color, speed, name, money):
-        super().__init__(x, y, size, color, speed, "resources/player.png")
+
+        super().__init__(
+            x,
+            y,
+            size,
+            color,
+            speed,
+            frame_images=["resources/player1.png", "resources/player2.png"],
+        )
         self.name = str(name) if name else ""
         self.has_laser_beam = False
         self.money = money
@@ -55,7 +91,10 @@ class Player(GameObject):
         super().draw(screen, offset_x, offset_y)
         name_text = font.render(self.name, True, BLACK)
         name_rect = name_text.get_rect(
-            center=(int(self.x - offset_x + self.size//2), int(self.y - offset_y - 10))
+            center=(
+                int(self.x - offset_x + self.size // 2),
+                int(self.y - offset_y - 10),
+            )
         )
         screen.blit(name_text, name_rect)
 
@@ -78,7 +117,14 @@ class Player(GameObject):
 
 class Enemy(GameObject):
     def __init__(self, x, y, size, color, speed, minimap_radius):
-        super().__init__(x, y, size, color, speed, "resources/player.png")
+        super().__init__(
+            x,
+            y,
+            size,
+            color,
+            speed,
+            frame_images=["resources/player1.png", "resources/player2.png"],
+        )
         self.hit_count = 0
         self.hit_timer = 0
         self.minimap_radius = minimap_radius
@@ -253,7 +299,6 @@ class Projectile(GameObject):
             self.color,
             (int(self.x - offset_x), int(self.y - offset_y), self.size, self.size),
         )
-
 
 
 class Money:
@@ -773,6 +818,7 @@ class Game(ConnectionListener):
                     self.laser_beams.remove(laser_beam)
 
             self.enemy.update(dt)
+            self.player.update(dt)
 
             self.projectiles = [
                 p
