@@ -174,6 +174,7 @@ class Enemy(GameObject):
         self.hit_timer = 0
 
     def update(self, dt):
+        super().update(dt)
         if self.hit_timer > 0:
             self.hit_timer -= 1
             if self.hit_timer == 0:
