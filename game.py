@@ -13,7 +13,7 @@ info = pygame.display.Info()
 width = info.current_w
 height = info.current_h
 screen = pygame.display.set_mode((width, height), pygame.NOFRAME)
-pygame.display.set_caption("ProGame")
+pygame.display.set_caption("Untitled Game")
 
 # Define colors
 RED = (255, 0, 0)
@@ -24,6 +24,10 @@ GRAY = (200, 200, 200)
 
 # Define font
 font = pygame.font.Font(None, 36)
+
+# Define size constants
+PLAYER_SIZE = 40
+ENEMY_SIZE = 40
 
 
 class GameObject:
@@ -309,7 +313,7 @@ class LaserBeam(GameObject):
 
         d = math.sqrt(ex**2 + ey**2)
 
-        if d < 20:
+        if d < ENEMY_SIZE:
             return True
         return False
 
@@ -462,7 +466,7 @@ class Game(ConnectionListener):
     def __init__(self):
         self.money = Money()
         self.player = Player(
-            0, 0, 20, RED, 300, "Player", self.money
+            0, 0, PLAYER_SIZE, RED, 300, "Player", self.money
         )  # Initialize the player with a default name
         self.players = []
         self.enemy = None
@@ -540,7 +544,7 @@ class Game(ConnectionListener):
                         self.enemy = Enemy(
                             random.randint(-400, 400),
                             random.randint(-400, 400),
-                            20,
+                            ENEMY_SIZE,
                             GREEN,
                             100,
                             minimap_radius,
@@ -597,7 +601,7 @@ class Game(ConnectionListener):
     def Network_game_state(self, data):
         game_state = data["data"]
         self.players = [
-            Player(p["x"], p["y"], 20, RED, 300, p["name"], Money())
+            Player(p["x"], p["y"], PLAYER_SIZE, RED, 300, p["name"], Money())
             for p in game_state["players"]
         ]
         self.enemy.x = game_state["enemy"]["x"]

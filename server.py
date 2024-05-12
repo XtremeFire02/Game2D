@@ -11,10 +11,14 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GRAY = (200, 200, 200)
 
+# Define size constants
+PLAYER_SIZE = 40
+ENEMY_SIZE = 40
+
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
-        self.player = Player(0, 0, 20, RED, 300, "", Money())
+        self.player = Player(0, 0, PLAYER_SIZE, RED, 300, "", Money())
         Channel.__init__(self, *args, **kwargs)
 
     def Network_move(self, data):
@@ -45,7 +49,7 @@ class GameServer(Server):
     def __init__(self, *args, **kwargs):
         self.players = []
         self.enemy = Enemy(
-            random.randint(-400, 400), random.randint(-400, 400), 20, GREEN, 100, 100
+            random.randint(-400, 400), random.randint(-400, 400), ENEMY_SIZE, GREEN, 100, 100
         )
         self.projectiles = []
         self.laser_beams = []
