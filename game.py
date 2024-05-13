@@ -224,7 +224,7 @@ class ShopScreen:
                         laser_beam_text_rect.collidepoint(mouse_pos)
                         and not self.laser_beam_purchased
                     ):
-                        if self.player.money.amount >= 500:
+                        if self.player.money.amount >= 500 or DEBUG_MODE:
                             self.player.money.amount -= 500
                             self.player.has_laser_beam = True
                             self.laser_beam_purchased = True
@@ -369,8 +369,8 @@ class ChatBox:
         self.x = x
         self.y = y
         self.width = width
-        self.inactive_height = height
-        self.active_height = height * 2
+        self.inactive_height = height - 10
+        self.active_height = height * 2 - 10
         self.height = height
         self.font = font
         self.bg_color = bg_color
@@ -483,7 +483,7 @@ class ChatBox:
                     game.chat_active = False
                     self.typing_indicator = ""
                     self.height = self.inactive_height
-                    self.y = height - self.inactive_height
+                    self.y = height - self.inactive_height - 10
                 elif event.key == pygame.K_BACKSPACE:
                     self.input_text = self.input_text[:-1]
                 else:
@@ -494,7 +494,7 @@ class ChatBox:
                 game.chat_active = True
                 self.typing_indicator = "_"
                 self.height = self.active_height
-                self.y = height - self.active_height
+                self.y = height - self.active_height - 10
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if not (
                 self.x < event.pos[0] < self.x + self.width
@@ -504,7 +504,7 @@ class ChatBox:
                 game.chat_active = False
                 self.typing_indicator = ""
                 self.height = self.inactive_height
-                self.y = height - self.inactive_height
+                self.y = height - self.inactive_height - 10
 
 
 class Game(ConnectionListener):
@@ -536,7 +536,7 @@ class Game(ConnectionListener):
             None, 24
         )  # Create a new font with a smaller size
         self.chat_box = ChatBox(
-            10, height - 150, 300, 140, self.chat_font, (0, 0, 0, 128), WHITE
+            10, height - 160, 300, 140, self.chat_font, (0, 0, 0, 128), WHITE
         )
         self.chat_active = False
 
