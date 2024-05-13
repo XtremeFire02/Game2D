@@ -3,7 +3,7 @@ import random
 import math
 from PodSixNet.Connection import ConnectionListener, connection
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 # Initialize Pygame
 pygame.init()
@@ -74,7 +74,6 @@ class GameObject:
 
 class Player(GameObject):
     def __init__(self, x, y, size, color, speed, name, money):
-
         super().__init__(
             x,
             y,
@@ -523,6 +522,8 @@ class Game(ConnectionListener):
         self.running = False
         self.offset_x = 0
         self.offset_y = 0
+        self.player_name = ""
+        self.ip_address = ""
         minimap_width = 200
         minimap_height = 200
         minimap_x = width - minimap_width
@@ -543,9 +544,7 @@ class Game(ConnectionListener):
     def Network(self, data):
         print("Received data:", data)
 
-    def start_screen(self):
-        player_name = ""
-        ip_address = ""
+    def start_screen(self, player_name="", ip_address=""):
         start_screen = True
 
         name_input_box = pygame.Rect(width // 2 - 100, height // 2 - 20, 200, 40)
@@ -581,9 +580,9 @@ class Game(ConnectionListener):
 
                     if play_rect.collidepoint(event.pos):
                         start_screen = False
-                        self.player.name = (
-                            player_name  # Update the existing player's name
-                        )
+                        self.player.name = player_name
+                        self.ip_address = ip_address
+                        self.player_name = player_name
                         minimap_radius = (
                             min(self.minimap.width, self.minimap.height) // 2
                         )
@@ -703,96 +702,121 @@ class Game(ConnectionListener):
         self.running = True
         clock = pygame.time.Clock()
 
-        self.start_screen()
+        while True:
+            if self.player_name == "" or self.ip_address == "":
+                self.start_screen()
+            else:
+                self.start_screen(self.player_name, self.ip_address)
+                self.running = True
 
-        while self.running:
-            dt = clock.tick(60) / 1000
-            self.Pump()
-            connection.Pump()
+            while self.running:
+                dt = clock.tick(60) / 1000
+                self.Pump()
+                connection.Pump()
 
-            if self.shop_screen.is_open():
-                events = pygame.event.get()
-                keep_open = self.shop_screen.handle_events(events)
-                if not keep_open:
-                    self.running = False
-                self.shop_screen.draw(screen)
-                pygame.display.flip()
-                continue
+                if self.shop_screen.is_open():
+                    events = pygame.event.get()
+                    keep_open = self.shop_screen.handle_events(events)
+                    if not keep_open:
+                        self.running = False
+                    self.shop_screen.draw(screen)
+                    pygame.display.flip()
+                    continue
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:  # Left click
-                        mouse_pos = pygame.mouse.get_pos()
-                        angle = math.atan2(
-                            mouse_pos[1] - height // 2, mouse_pos[0] - width // 2
-                        )
-                        velocity = [math.cos(angle) * 400, math.sin(angle) * 400]
-                        projectile = Projectile(
-                            self.player.x, self.player.y, 5, RED, 400, velocity
-                        )
-                        self.own_projectiles.append(projectile)
-                        connection.Send(
-                            {
-                                "action": "projectile",
-                                "x": self.player.x,
-                                "y": self.player.y,
-                                "velocity": velocity,
-                                "name": self.player.name,
-                            }
-                        )
-                    elif (
-                        event.button == 3 and self.player.has_laser_beam
-                    ):  # Right click
-                        mouse_pos = pygame.mouse.get_pos()
-                        angle = math.atan2(
-                            mouse_pos[1] - height // 2, mouse_pos[0] - width // 2
-                        )
-                        fade_duration = 0.5  # Set the desired fade duration in seconds
-                        laser_beam = LaserBeam(
-                            self.player.x,
-                            self.player.y,
-                            2,
-                            RED,
-                            0,
-                            angle,
-                            fade_duration,
-                        )
-                        self.laser_beams.append(laser_beam)
-                        connection.Send(
-                            {
-                                "action": "laser_beam",
-                                "x": self.player.x,
-                                "y": self.player.y,
-                                "angle": angle,
-                                "name": self.player.name,
-                            }
-                        )
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        self.shop_screen.open_shop()
-                    elif (
-                        event.key == pygame.K_ESCAPE and not self.shop_screen.is_open()
-                    ):
-                        self.shop_screen.open_shop()
-                self.chat_box.update(event, self.player, self)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.running = False
+                    elif event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:  # Left click
+                            mouse_pos = pygame.mouse.get_pos()
+                            angle = math.atan2(
+                                mouse_pos[1] - height // 2, mouse_pos[0] - width // 2
+                            )
+                            velocity = [math.cos(angle) * 400, math.sin(angle) * 400]
+                            projectile = Projectile(
+                                self.player.x, self.player.y, 5, RED, 400, velocity
+                            )
+                            self.own_projectiles.append(projectile)
+                            connection.Send(
+                                {
+                                    "action": "projectile",
+                                    "x": self.player.x,
+                                    "y": self.player.y,
+                                    "velocity": velocity,
+                                    "name": self.player.name,
+                                }
+                            )
+                        elif (
+                            event.button == 3 and self.player.has_laser_beam
+                        ):  # Right click
+                            mouse_pos = pygame.mouse.get_pos()
+                            angle = math.atan2(
+                                mouse_pos[1] - height // 2, mouse_pos[0] - width // 2
+                            )
+                            fade_duration = (
+                                0.5  # Set the desired fade duration in seconds
+                            )
+                            laser_beam = LaserBeam(
+                                self.player.x,
+                                self.player.y,
+                                2,
+                                RED,
+                                0,
+                                angle,
+                                fade_duration,
+                            )
+                            self.laser_beams.append(laser_beam)
+                            connection.Send(
+                                {
+                                    "action": "laser_beam",
+                                    "x": self.player.x,
+                                    "y": self.player.y,
+                                    "angle": angle,
+                                    "name": self.player.name,
+                                }
+                            )
+                    elif event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            self.shop_screen.open_shop()
+                        elif (
+                            event.key == pygame.K_ESCAPE
+                            and not self.shop_screen.is_open()
+                        ):
+                            self.shop_screen.open_shop()
+                    self.chat_box.update(event, self.player, self)
 
-            keys = pygame.key.get_pressed()
-            self.player.move(dt, keys, self.player, self)
-            self.enemy.move(dt, (self.player.x, self.player.y))
+                keys = pygame.key.get_pressed()
+                self.player.move(dt, keys, self.player, self)
+                self.enemy.move(dt, (self.player.x, self.player.y))
 
-            for projectile in self.own_projectiles:
-                projectile.move(dt)
+                for projectile in self.own_projectiles:
+                    projectile.move(dt)
 
-                # Check for collision between projectile and enemy only if the enemy is not red
-                if self.enemy.color != RED:
-                    if (
-                        self.enemy.x < projectile.x < self.enemy.x + self.enemy.size
-                        and self.enemy.y < projectile.y < self.enemy.y + self.enemy.size
-                    ):
+                    # Check for collision between projectile and enemy only if the enemy is not red
+                    if self.enemy.color != RED:
+                        if (
+                            self.enemy.x < projectile.x < self.enemy.x + self.enemy.size
+                            and self.enemy.y
+                            < projectile.y
+                            < self.enemy.y + self.enemy.size
+                        ):
+                            self.enemy.hit()
+                            self.own_projectiles.remove(projectile)
+
+                            # Check if the enemy has been hit 3 times
+                            if self.enemy.hit_count >= 3:
+                                self.money.gain(100)
+                                self.enemy.respawn((self.player.x, self.player.y))
+                                self.enemy.hit_count = (
+                                    0  # Reset the hit count after respawning
+                                )
+
+                for laser_beam in self.laser_beams:
+                    laser_beam.move()
+
+                    # Check for collision between laser beam and enemy
+                    if laser_beam.check_collision((self.enemy.x, self.enemy.y)):
                         self.enemy.hit()
-                        self.own_projectiles.remove(projectile)
 
                         # Check if the enemy has been hit 3 times
                         if self.enemy.hit_count >= 3:
@@ -802,69 +826,57 @@ class Game(ConnectionListener):
                                 0  # Reset the hit count after respawning
                             )
 
-            for laser_beam in self.laser_beams:
-                laser_beam.move()
+                    # Remove faded laser beams
+                    if laser_beam.is_faded():
+                        self.laser_beams.remove(laser_beam)
 
-                # Check for collision between laser beam and enemy
-                if laser_beam.check_collision((self.enemy.x, self.enemy.y)):
-                    self.enemy.hit()
+                self.enemy.update(dt)
+                self.player.update(dt)
 
-                    # Check if the enemy has been hit 3 times
-                    if self.enemy.hit_count >= 3:
-                        self.money.gain(100)
-                        self.enemy.respawn((self.player.x, self.player.y))
-                        self.enemy.hit_count = 0  # Reset the hit count after respawning
+                self.projectiles = [
+                    p
+                    for p in self.projectiles
+                    if abs(p.x - self.player.x) <= 1000
+                    and abs(p.y - self.player.y) <= 1000
+                ]
 
-                # Remove faded laser beams
-                if laser_beam.is_faded():
-                    self.laser_beams.remove(laser_beam)
+                if (
+                    not DEBUG_MODE
+                    and abs(self.player.x - self.enemy.x) < self.player.size
+                    and abs(self.player.y - self.enemy.y) < self.player.size
+                ):
+                    self.running = False
+                    print("Game Over! You lost.")
 
-            self.enemy.update(dt)
-            self.player.update(dt)
+                self.offset_x = self.player.x - width // 2
+                self.offset_y = self.player.y - height // 2
 
-            self.projectiles = [
-                p
-                for p in self.projectiles
-                if abs(p.x - self.player.x) <= 1000 and abs(p.y - self.player.y) <= 1000
-            ]
+                screen.fill(WHITE)
+                self.draw_grid()
 
-            if (
-                not DEBUG_MODE
-                and abs(self.player.x - self.enemy.x) < self.player.size
-                and abs(self.player.y - self.enemy.y) < self.player.size
-            ):
-                self.running = False
-                print("Game Over! You lost.")
+                self.player.draw(screen, self.offset_x, self.offset_y)
+                self.enemy.draw(screen, self.offset_x, self.offset_y)
 
-            self.offset_x = self.player.x - width // 2
-            self.offset_y = self.player.y - height // 2
+                for other_player in self.players:
+                    # Do not draw the current player again
+                    if other_player.name == self.player.name:
+                        continue
+                    other_player.draw(screen, self.offset_x, self.offset_y)
 
-            screen.fill(WHITE)
-            self.draw_grid()
+                for projectile in self.projectiles:
+                    projectile.draw(screen, self.offset_x, self.offset_y)
+                for projectile in self.own_projectiles:
+                    projectile.draw(screen, self.offset_x, self.offset_y)
+                for laser_beam in self.laser_beams:
+                    laser_beam.draw(screen, self.offset_x, self.offset_y)
+                self.minimap.draw(screen, self.player, self.enemy)
 
-            self.player.draw(screen, self.offset_x, self.offset_y)
-            self.enemy.draw(screen, self.offset_x, self.offset_y)
+                text = self.font.render(f"Cash: ${self.money.amount}", True, (0, 0, 0))
+                text_rect = text.get_rect(center=(width - 75, 220))
 
-            for other_player in self.players:
-                # Do not draw the current player again
-                if other_player.name == self.player.name:
-                    continue
-                other_player.draw(screen, self.offset_x, self.offset_y)
-
-            for projectile in self.projectiles:
-                projectile.draw(screen, self.offset_x, self.offset_y)
-            for projectile in self.own_projectiles:
-                projectile.draw(screen, self.offset_x, self.offset_y)
-            for laser_beam in self.laser_beams:
-                laser_beam.draw(screen, self.offset_x, self.offset_y)
-            self.minimap.draw(screen, self.player, self.enemy)
-
-            text = self.font.render(f"Cash: ${self.money.amount}", True, (0, 0, 0))
-            text_rect = text.get_rect(center=(width - 75, 220))
-
-            self.chat_box.draw(screen)
-            screen.blit(text, text_rect)
-            pygame.display.flip()
+                self.chat_box.draw(screen)
+                screen.blit(text, text_rect)
+                pygame.display.flip()
 
 
 if __name__ == "__main__":
