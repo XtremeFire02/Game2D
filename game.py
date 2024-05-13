@@ -381,7 +381,7 @@ class ChatBox:
         self.typing_indicator = ""
         self.typing_indicator_visible = True
         self.typing_indicator_timer = 0
-        self.typing_indicator_interval = 1000
+        self.typing_indicator_interval = 500
 
     def draw(self, screen):
         # Draw semi-transparent background
