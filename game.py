@@ -46,11 +46,11 @@ class GameObject:
 
         if self.sprite_path:
             self.sprite = pygame.image.load(sprite_path).convert_alpha()
-            self.sprite = pygame.transform.scale(self.sprite, (size, size))
+            self.sprite = pygame.transform.smoothscale(self.sprite, (size, size))
         elif self.frame_images:
             for frame_image in self.frame_images:
                 loaded_image = pygame.image.load(frame_image).convert_alpha()
-                scaled_image = pygame.transform.scale(loaded_image, (size, size))
+                scaled_image = pygame.transform.smoothscale(loaded_image, (size, size))
                 self.animation_frames.append(scaled_image)
 
     def draw(self, screen, offset_x, offset_y):
