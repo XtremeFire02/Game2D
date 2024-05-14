@@ -3,7 +3,7 @@ import random
 import math
 from PodSixNet.Connection import ConnectionListener, connection
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 # Initialize Pygame
 pygame.init()
