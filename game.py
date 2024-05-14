@@ -3,7 +3,7 @@ import random
 import math
 from PodSixNet.Connection import ConnectionListener, connection
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 # Initialize Pygame
 pygame.init()
@@ -41,7 +41,7 @@ class GameObject:
         self.frame_images = frame_images
         self.animation_frames = []
         self.current_frame = 0
-        self.animation_speed = 1
+        self.animation_speed = 0.2
         self.elapsed_time = 0
 
         if self.sprite_path:
@@ -80,7 +80,7 @@ class Player(GameObject):
             size,
             color,
             speed,
-            frame_images=["resources/player1.png", "resources/player2.png"],
+            frame_images=["resources/player1.png", "resources/player2.png", "resources/player3.png", "resources/player2.png"],
         )
         self.name = str(name) if name else ""
         self.has_laser_beam = False
@@ -122,7 +122,7 @@ class Enemy(GameObject):
             size,
             color,
             speed,
-            frame_images=["resources/player1.png", "resources/player2.png"],
+            frame_images=["resources/player1.png", "resources/player2.png", "resources/player3.png"],
         )
         self.hit_count = 0
         self.hit_timer = 0
