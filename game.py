@@ -3,7 +3,7 @@ import random
 import math
 from PodSixNet.Connection import ConnectionListener, connection
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 # Initialize Pygame
 pygame.init()
@@ -122,7 +122,7 @@ class Enemy(GameObject):
             size,
             color,
             speed,
-            frame_images=["resources/player1.png", "resources/player2.png", "resources/player3.png"],
+            frame_images=["resources/enemy1.png"],
         )
         self.hit_count = 0
         self.hit_timer = 0
@@ -873,6 +873,10 @@ class Game(ConnectionListener):
 
                 text = self.font.render(f"Cash: ${self.money.amount}", True, (0, 0, 0))
                 text_rect = text.get_rect(center=(width - 75, 220))
+
+                coordinate_text = self.font.render(f"X: {int(self.player.x)}, Y: {int(self.player.y)}", True, (0, 0, 0))
+                coordinate_text_rect = coordinate_text.get_rect(center=(width - 100, 260))
+                screen.blit(coordinate_text, coordinate_text_rect)
 
                 self.chat_box.draw(screen)
                 screen.blit(text, text_rect)
