@@ -562,8 +562,8 @@ class Game(ConnectionListener):
     def start_screen(self, player_name="", ip_address=""):
         start_screen = True
 
-        name_input_box = pygame.Rect(width // 2 - 100, height // 2 - 20, 200, 40)
-        ip_input_box = pygame.Rect(width // 2 - 100, height // 2 + 20, 200, 40)
+        name_input_box = pygame.Rect(width // 2 - 100, height // 2 - 22, 200, 40)
+        ip_input_box = pygame.Rect(width // 2 - 100, height // 2 + 22, 200, 40)
         color_inactive = pygame.Color("lightskyblue3")
         color_active = pygame.Color("dodgerblue2")
         name_color = color_inactive
