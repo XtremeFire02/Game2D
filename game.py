@@ -659,6 +659,8 @@ class Game(ConnectionListener):
     def Network_game_state(self, data):
         game_state = data["data"]
 
+        server_player_names = set(p["name"] for p in game_state["players"])
+        self.players = {name: player for name, player in self.players.items() if name in server_player_names}
         for p in game_state["players"]:
             if self.players.get(p["name"]) is None:
                 self.players[p["name"]] = Player(p["x"], p["y"], PLAYER_SIZE, RED, 300, p["name"], Money())
