@@ -617,6 +617,23 @@ class Game(ConnectionListener):
                         active_input_index = (active_input_index + 1) % len(input_boxes)
                         name_active = active_input_index == 0
                         ip_active = active_input_index == 1
+                    elif event.key == pygame.K_RETURN:
+                        start_screen = False
+                        self.player.name = player_name
+                        self.ip_address = ip_address
+                        self.player_name = player_name
+                        minimap_radius = (
+                            min(self.minimap.width, self.minimap.height) // 2
+                        )
+                        self.enemy = Enemy(
+                            random.randint(-400, 400),
+                            random.randint(-400, 400),
+                            ENEMY_SIZE,
+                            GREEN,
+                            100,
+                            minimap_radius,
+                        )
+                        self.Connect((ip_address, 12345))
                     elif name_active:
                         if event.key == pygame.K_RETURN:
                             print(player_name)
