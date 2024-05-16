@@ -43,6 +43,10 @@ ENEMY_SIZE = 100
 LASER_BEAM_SIZE = 2
 LASER_FADE_DURATION = 0.5
 
+# Define damage constants
+PROJECTILE_DAMAGE = 10
+LASER_DAMAGE = 30
+
 
 class GameObject:
     def __init__(self, x, y, size, color, speed, sprite_path=None, frame_images=None):
@@ -85,6 +89,29 @@ class GameObject:
                 )
                 self.elapsed_time = 0
 
+    def draw_health_bar(self, screen, offset_x, offset_y):
+        health_bar_width = self.size
+        health_bar_height = 10
+        health_bar_x = self.x - offset_x
+        health_bar_y = self.y - offset_y - 30
+
+        health_percentage = self.health / 100
+        health_bar_fill_width = int(health_bar_width * health_percentage)
+
+        # Draw the health bar background
+        pygame.draw.rect(
+            screen,
+            RED,
+            (health_bar_x, health_bar_y, health_bar_width, health_bar_height),
+        )
+
+        # Draw the health bar fill
+        pygame.draw.rect(
+            screen,
+            GREEN,
+            (health_bar_x, health_bar_y, health_bar_fill_width, health_bar_height),
+        )
+
 
 class Player(GameObject):
     def __init__(self, x, y, size, color, speed, name, money):
@@ -104,6 +131,7 @@ class Player(GameObject):
         self.name = str(name) if name else ""
         self.has_laser_beam = False
         self.money = money
+        self.health = 100
 
     def draw(self, screen, offset_x, offset_y):
         super().draw(screen, offset_x, offset_y)
@@ -146,6 +174,7 @@ class Enemy(GameObject):
         self.hit_count = 0
         self.hit_timer = 0
         self.minimap_radius = minimap_radius
+        self.health = 100
 
     def move(self, dt, player_pos):
         if self.x < player_pos[0]:
@@ -719,7 +748,7 @@ class Game(ConnectionListener):
                 RED,
                 0,
                 lb["angle"],
-                LASER_FADE_DURATION
+                LASER_FADE_DURATION,
             )
             for lb in game_state["laser_beams"]
         ]
@@ -785,6 +814,7 @@ class Game(ConnectionListener):
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         self.running = False
+                        return
                     elif event.type == pygame.MOUSEBUTTONDOWN:
                         if event.button == 1:  # Left click
                             mouse_pos = pygame.mouse.get_pos()
@@ -793,7 +823,12 @@ class Game(ConnectionListener):
                             )
                             velocity = [math.cos(angle) * 400, math.sin(angle) * 400]
                             projectile = Projectile(
-                                self.player.x + self.player.size // 2, self.player.y + self.player.size // 2, 5, RED, 400, velocity
+                                self.player.x + self.player.size // 2,
+                                self.player.y + self.player.size // 2,
+                                5,
+                                RED,
+                                400,
+                                velocity,
                             )
                             self.own_projectiles.append(projectile)
                             connection.Send(
@@ -919,14 +954,16 @@ class Game(ConnectionListener):
                     laser_beam.draw(screen, self.offset_x, self.offset_y)
 
                 self.player.draw(screen, self.offset_x, self.offset_y)
+                self.player.draw_health_bar(screen, self.offset_x, self.offset_y)
                 self.enemy.draw(screen, self.offset_x, self.offset_y)
+                self.enemy.draw_health_bar(screen, self.offset_x, self.offset_y)
 
                 for other_player in self.players.values():
                     # Do not draw the current player again
                     if other_player.name == self.player.name:
                         continue
                     other_player.draw(screen, self.offset_x, self.offset_y)
-                
+
                 self.minimap.draw(screen, self.player, self.enemy)
 
                 text = self.font.render(f"Cash: ${self.money.amount}", True, (0, 0, 0))
