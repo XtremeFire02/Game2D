@@ -874,7 +874,7 @@ class Game(ConnectionListener):
                 text = self.font.render(f"Cash: ${self.money.amount}", True, (0, 0, 0))
                 text_rect = text.get_rect(center=(width - 75, 220))
 
-                coordinate_text = self.font.render(f"X: {int(self.player.x)}, Y: {int(self.player.y)}", True, (0, 0, 0))
+                coordinate_text = self.font.render(f"X: {int(self.player.x)//10}, Y: {int(self.player.y)//10}", True, (0, 0, 0))
                 coordinate_text_rect = coordinate_text.get_rect(center=(width - 100, 260))
                 screen.blit(coordinate_text, coordinate_text_rect)
 
