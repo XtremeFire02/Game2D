@@ -77,20 +77,56 @@ class GameServer(Server):
         print(f"Player disconnected: {player}")
         self.players.remove(player)
 
+    def distance(self, obj1, obj2):
+        return math.sqrt((obj1.x - obj2.x) ** 2 + (obj1.y - obj2.y) ** 2)
+
     def update(self):
         self.Pump()
 
         if not self.players:
             return
 
-        self.enemy.move(
-            self.frame_time, (self.players[0].player.x, self.players[0].player.y)
+        nearest_player = min(
+            self.players, key=lambda p: self.distance(p.player, self.enemy)
         )
+        self.enemy.move(
+            self.frame_time, (nearest_player.player.x, nearest_player.player.y)
+        )
+
+        if random.random() < 0.01:  # Adjust the probability of shooting
+            angle = math.atan2(
+                nearest_player.player.y - self.enemy.y,
+                nearest_player.player.x - self.enemy.x,
+            )
+            velocity = [math.cos(angle) * 400, math.sin(angle) * 400]
+            projectile = Projectile(
+                self.enemy.x + self.enemy.size // 2,
+                self.enemy.y + self.enemy.size // 2,
+                5,
+                RED,
+                400,
+                velocity,
+                "enemy",
+            )
+            self.projectiles.append(projectile)
 
         for projectile in self.projectiles:
             projectile.move(self.frame_time)
 
-            if self.enemy.color != RED:
+            if projectile.owner == "enemy":
+                for player in self.players:
+                    if (
+                        player.player.x
+                        < projectile.x
+                        < player.player.x + player.player.size
+                        and player.player.y
+                        < projectile.y
+                        < player.player.y + player.player.size
+                    ):
+                        player.player.health -= PROJECTILE_DAMAGE
+                        self.projectiles.remove(projectile)
+                        break
+            elif self.enemy.color != RED:
                 if (
                     self.enemy.x < projectile.x < self.enemy.x + self.enemy.size
                     and self.enemy.y < projectile.y < self.enemy.y + self.enemy.size
@@ -219,7 +255,7 @@ class Enemy(GameObject):
         self.health -= PROJECTILE_DAMAGE
         self.hit_timer = 30
         self.color = RED
-    
+
     def hit_laser(self):
         self.health -= LASER_DAMAGE
         self.hit_timer = 30

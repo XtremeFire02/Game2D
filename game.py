@@ -727,6 +727,10 @@ class Game(ConnectionListener):
                 self.players[p["name"]] = Player(
                     p["x"], p["y"], PLAYER_SIZE, RED, 300, p["name"], Money()
                 )
+            
+            if p["name"] == self.player.name:
+                self.player.health = p["health"]
+
             player = self.players[p["name"]]
             player.x = p["x"]
             player.y = p["y"]
@@ -812,6 +816,10 @@ class Game(ConnectionListener):
                     self.shop_screen.draw(screen)
                     pygame.display.flip()
                     continue
+                
+                if self.player.health <= 0:
+                    self.running = False
+                    return
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
