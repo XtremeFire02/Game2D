@@ -4,16 +4,29 @@ import math
 from PodSixNet.Connection import ConnectionListener, connection
 
 DEBUG_MODE = True
+BORDERLESS_FULLSCREEN = False
+WINDOWED = True
 
 # Initialize Pygame
 pygame.init()
+width = 0
+height = 0
+screen = None
 
-# Set up the game window
-info = pygame.display.Info()
-width = info.current_w
-height = info.current_h
-screen = pygame.display.set_mode((width, height), pygame.NOFRAME)
-pygame.display.set_caption("Untitled Game")
+if BORDERLESS_FULLSCREEN:
+    # Set up the game window
+    info = pygame.display.Info()
+    width = info.current_w
+    height = info.current_h
+    screen = pygame.display.set_mode((width, height), pygame.NOFRAME)
+    pygame.display.set_caption("Untitled Game")
+
+if WINDOWED:
+    width = 800
+    height = 600
+    screen = pygame.display.set_mode((width, height), pygame.SHOWN)
+    pygame.display.set_caption("Untitled Game")
+
 
 # Define colors
 RED = (255, 0, 0)
@@ -513,7 +526,7 @@ class Game(ConnectionListener):
         self.player = Player(
             0, 0, PLAYER_SIZE, RED, 300, "Player", self.money
         )  # Initialize the player with a default name
-        self.players = []
+        self.players = dict()
         self.enemy = None
         self.projectiles = []
         self.own_projectiles = []
@@ -645,11 +658,13 @@ class Game(ConnectionListener):
 
     def Network_game_state(self, data):
         game_state = data["data"]
-        self.players = [
-            Player(p["x"], p["y"], PLAYER_SIZE, RED, 300, p["name"], Money())
-            for p in game_state["players"]
-            if p["name"] != self.player.name
-        ]
+
+        for p in game_state["players"]:
+            if self.players.get(p["name"]) is None:
+                self.players[p["name"]] = Player(p["x"], p["y"], PLAYER_SIZE, RED, 300, p["name"], Money())
+            player = self.players[p["name"]]
+            player.x = p["x"]
+            player.y = p["y"]
         self.enemy.x = game_state["enemy"]["x"]
         self.enemy.y = game_state["enemy"]["y"]
         self.enemy.color = tuple(game_state["enemy"]["color"])
@@ -832,6 +847,8 @@ class Game(ConnectionListener):
 
                 self.enemy.update(dt)
                 self.player.update(dt)
+                for player in self.players.values():
+                    player.update(dt)
 
                 self.projectiles = [
                     p
@@ -857,7 +874,7 @@ class Game(ConnectionListener):
                 self.player.draw(screen, self.offset_x, self.offset_y)
                 self.enemy.draw(screen, self.offset_x, self.offset_y)
 
-                for other_player in self.players:
+                for other_player in self.players.values():
                     # Do not draw the current player again
                     if other_player.name == self.player.name:
                         continue
