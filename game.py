@@ -793,14 +793,14 @@ class Game(ConnectionListener):
                             )
                             velocity = [math.cos(angle) * 400, math.sin(angle) * 400]
                             projectile = Projectile(
-                                self.player.x, self.player.y, 5, RED, 400, velocity
+                                self.player.x + self.player.size // 2, self.player.y + self.player.size // 2, 5, RED, 400, velocity
                             )
                             self.own_projectiles.append(projectile)
                             connection.Send(
                                 {
                                     "action": "projectile",
-                                    "x": self.player.x,
-                                    "y": self.player.y,
+                                    "x": self.player.x + self.player.size // 2,
+                                    "y": self.player.y + self.player.size // 2,
                                     "velocity": velocity,
                                     "name": self.player.name,
                                 }
@@ -813,8 +813,8 @@ class Game(ConnectionListener):
                                 mouse_pos[1] - height // 2, mouse_pos[0] - width // 2
                             )
                             laser_beam = LaserBeam(
-                                self.player.x,
-                                self.player.y,
+                                self.player.x + self.player.size // 2,
+                                self.player.y + self.player.size // 2,
                                 LASER_BEAM_SIZE,
                                 RED,
                                 0,
@@ -825,8 +825,8 @@ class Game(ConnectionListener):
                             connection.Send(
                                 {
                                     "action": "laser_beam",
-                                    "x": self.player.x,
-                                    "y": self.player.y,
+                                    "x": self.player.x + self.player.size // 2,
+                                    "y": self.player.y + self.player.size // 2,
                                     "angle": angle,
                                     "name": self.player.name,
                                 }
