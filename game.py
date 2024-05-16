@@ -911,6 +911,12 @@ class Game(ConnectionListener):
 
                 screen.fill(WHITE)
                 self.draw_grid()
+                for projectile in self.projectiles:
+                    projectile.draw(screen, self.offset_x, self.offset_y)
+                for projectile in self.own_projectiles:
+                    projectile.draw(screen, self.offset_x, self.offset_y)
+                for laser_beam in self.laser_beams:
+                    laser_beam.draw(screen, self.offset_x, self.offset_y)
 
                 self.player.draw(screen, self.offset_x, self.offset_y)
                 self.enemy.draw(screen, self.offset_x, self.offset_y)
@@ -920,13 +926,7 @@ class Game(ConnectionListener):
                     if other_player.name == self.player.name:
                         continue
                     other_player.draw(screen, self.offset_x, self.offset_y)
-
-                for projectile in self.projectiles:
-                    projectile.draw(screen, self.offset_x, self.offset_y)
-                for projectile in self.own_projectiles:
-                    projectile.draw(screen, self.offset_x, self.offset_y)
-                for laser_beam in self.laser_beams:
-                    laser_beam.draw(screen, self.offset_x, self.offset_y)
+                
                 self.minimap.draw(screen, self.player, self.enemy)
 
                 text = self.font.render(f"Cash: ${self.money.amount}", True, (0, 0, 0))
