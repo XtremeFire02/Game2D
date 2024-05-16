@@ -568,8 +568,11 @@ class Game(ConnectionListener):
         color_active = pygame.Color("dodgerblue2")
         name_color = color_inactive
         ip_color = color_inactive
-        name_active = False
+        name_active = True
         ip_active = False
+
+        input_boxes = [name_input_box, ip_input_box]
+        active_input_index = 0
 
         play_text = font.render("Play", True, BLACK)
         play_rect = play_text.get_rect(center=(width // 2, height * 3 // 4))
@@ -581,17 +584,16 @@ class Game(ConnectionListener):
                     self.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if name_input_box.collidepoint(event.pos):
-                        name_active = not name_active
+                        name_active = True
+                        ip_active = False
+                        active_input_index = 0
+                    elif ip_input_box.collidepoint(event.pos):
+                        name_active = False
+                        ip_active = True
+                        active_input_index = 1
                     else:
                         name_active = False
-
-                    if ip_input_box.collidepoint(event.pos):
-                        ip_active = not ip_active
-                    else:
                         ip_active = False
-
-                    name_color = color_active if name_active else color_inactive
-                    ip_color = color_active if ip_active else color_inactive
 
                     if play_rect.collidepoint(event.pos):
                         start_screen = False
@@ -611,20 +613,27 @@ class Game(ConnectionListener):
                         )
                         self.Connect((ip_address, 12345))
                 elif event.type == pygame.KEYDOWN:
-                    if name_active:
+                    if event.key == pygame.K_TAB:
+                        active_input_index = (active_input_index + 1) % len(input_boxes)
+                        name_active = active_input_index == 0
+                        ip_active = active_input_index == 1
+                    elif name_active:
                         if event.key == pygame.K_RETURN:
                             print(player_name)
                         elif event.key == pygame.K_BACKSPACE:
                             player_name = player_name[:-1]
                         else:
                             player_name += event.unicode
-                    if ip_active:
+                    elif ip_active:
                         if event.key == pygame.K_RETURN:
                             print(ip_address)
                         elif event.key == pygame.K_BACKSPACE:
                             ip_address = ip_address[:-1]
                         else:
                             ip_address += event.unicode
+
+            name_color = color_active if name_active else color_inactive
+            ip_color = color_active if ip_active else color_inactive
 
             screen.fill(WHITE)
             title_text = font.render("ProGame", True, BLACK)
