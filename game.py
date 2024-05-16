@@ -730,10 +730,12 @@ class Game(ConnectionListener):
             player = self.players[p["name"]]
             player.x = p["x"]
             player.y = p["y"]
+            player.health = p["health"]
 
         self.enemy.x = game_state["enemy"]["x"]
         self.enemy.y = game_state["enemy"]["y"]
         self.enemy.color = tuple(game_state["enemy"]["color"])
+        self.enemy.health = game_state["enemy"]["health"]
         self.projectiles = [
             Projectile(p["x"], p["y"], 5, RED, 0, [0, 0])
             for p in game_state["projectiles"]
@@ -883,39 +885,8 @@ class Game(ConnectionListener):
                 for projectile in self.own_projectiles:
                     projectile.move(dt)
 
-                    # Check for collision between projectile and enemy only if the enemy is not red
-                    if self.enemy.color != RED:
-                        if (
-                            self.enemy.x < projectile.x < self.enemy.x + self.enemy.size
-                            and self.enemy.y
-                            < projectile.y
-                            < self.enemy.y + self.enemy.size
-                        ):
-                            self.enemy.hit()
-                            self.own_projectiles.remove(projectile)
-
-                            # Check if the enemy has been hit 3 times
-                            if self.enemy.hit_count >= 3:
-                                self.money.gain(100)
-                                self.enemy.respawn((self.player.x, self.player.y))
-                                self.enemy.hit_count = (
-                                    0  # Reset the hit count after respawning
-                                )
-
                 for laser_beam in self.laser_beams:
                     laser_beam.move()
-
-                    # Check for collision between laser beam and enemy
-                    if laser_beam.check_collision((self.enemy.x, self.enemy.y)):
-                        self.enemy.hit()
-
-                        # Check if the enemy has been hit 3 times
-                        if self.enemy.hit_count >= 3:
-                            self.money.gain(100)
-                            self.enemy.respawn((self.player.x, self.player.y))
-                            self.enemy.hit_count = (
-                                0  # Reset the hit count after respawning
-                            )
 
                     # Remove faded laser beams
                     if laser_beam.is_faded():
@@ -963,6 +934,7 @@ class Game(ConnectionListener):
                     if other_player.name == self.player.name:
                         continue
                     other_player.draw(screen, self.offset_x, self.offset_y)
+                    other_player.draw_health_bar(screen, self.offset_x, self.offset_y)
 
                 self.minimap.draw(screen, self.player, self.enemy)
 

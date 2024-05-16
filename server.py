@@ -15,6 +15,10 @@ GRAY = (200, 200, 200)
 PLAYER_SIZE = 100
 ENEMY_SIZE = 100
 
+# Define damage constants
+PROJECTILE_DAMAGE = 10
+LASER_DAMAGE = 30
+
 
 class ClientChannel(Channel):
     def __init__(self, *args, **kwargs):
@@ -27,13 +31,15 @@ class ClientChannel(Channel):
         self.player.name = data["name"]
 
     def Network_projectile(self, data):
-        projectile = Projectile(data["x"], data["y"], 5, RED, 400, data["velocity"], data["name"])
+        projectile = Projectile(
+            data["x"], data["y"], 5, RED, 400, data["velocity"], data["name"]
+        )
         self._server.projectiles.append(projectile)
 
     def Network_laser_beam(self, data):
         laser_beam = LaserBeam(data["x"], data["y"], 2, RED, 0, data["angle"], 0.5)
         self._server.laser_beams.append(laser_beam)
-    
+
     def Network_chat(self, data):
         message = data["message"]
         sender = data["sender"]
@@ -49,7 +55,12 @@ class GameServer(Server):
     def __init__(self, *args, **kwargs):
         self.players = []
         self.enemy = Enemy(
-            random.randint(-400, 400), random.randint(-400, 400), ENEMY_SIZE, GREEN, 100, 100
+            random.randint(-400, 400),
+            random.randint(-400, 400),
+            ENEMY_SIZE,
+            GREEN,
+            100,
+            100,
         )
         self.projectiles = []
         self.laser_beams = []
@@ -84,28 +95,28 @@ class GameServer(Server):
                     self.enemy.x < projectile.x < self.enemy.x + self.enemy.size
                     and self.enemy.y < projectile.y < self.enemy.y + self.enemy.size
                 ):
-                    self.enemy.hit()
+                    self.enemy.hit_projectile()
                     self.projectiles.remove(projectile)
 
-                    if self.enemy.hit_count >= 3:
+                    if self.enemy.health <= 0:
                         self.players[0].player.money.gain(100)
                         self.enemy.respawn(
                             (self.players[0].player.x, self.players[0].player.y)
                         )
-                        self.enemy.hit_count = 0
+                        self.enemy.health = 100
 
         for laser_beam in self.laser_beams:
             laser_beam.move()
 
             if laser_beam.check_collision((self.enemy.x, self.enemy.y)):
-                self.enemy.hit()
+                self.enemy.hit_laser()
 
-                if self.enemy.hit_count >= 3:
+                if self.enemy.health <= 0:
                     self.players[0].player.money.gain(100)
                     self.enemy.respawn(
                         (self.players[0].player.x, self.players[0].player.y)
                     )
-                    self.enemy.hit_count = 0
+                    self.enemy.health = 100
 
             if laser_beam.is_faded():
                 self.laser_beams.remove(laser_beam)
@@ -127,10 +138,16 @@ class GameServer(Server):
                     "money": player.player.money.amount,
                     "has_laser_beam": player.player.has_laser_beam,
                     "name": player.player.name,
+                    "health": player.player.health,
                 }
                 for player in self.players
             ],
-            "enemy": {"x": self.enemy.x, "y": self.enemy.y, "color": self.enemy.color},
+            "enemy": {
+                "x": self.enemy.x,
+                "y": self.enemy.y,
+                "color": self.enemy.color,
+                "health": self.enemy.health,
+            },
             "projectiles": [
                 {"x": projectile.x, "y": projectile.y, "name": projectile.owner}
                 for projectile in self.projectiles
@@ -149,7 +166,7 @@ class GameServer(Server):
     def send_to_all(self, data):
         for player in self.players:
             player.Send({"action": "game_state", "data": data})
-    
+
     def broadcast_chat(self, message, sender):
         for player in self.players:
             if player.player.name != sender:
@@ -173,19 +190,20 @@ class GameObject:
 
 
 class Player(GameObject):
-    def __init__(self, x, y, size, color, speed, name, money):
+    def __init__(self, x, y, size, color, speed, name, money, health=100):
         super().__init__(x, y, size, color, speed)
         self.name = name
         self.has_laser_beam = False
         self.money = money
+        self.health = health
 
 
 class Enemy(GameObject):
-    def __init__(self, x, y, size, color, speed, minimap_radius):
+    def __init__(self, x, y, size, color, speed, minimap_radius, health=100):
         super().__init__(x, y, size, color, speed)
-        self.hit_count = 0
         self.hit_timer = 0
         self.minimap_radius = minimap_radius
+        self.health = health
 
     def move(self, dt, player_pos):
         if self.x < player_pos[0]:
@@ -197,8 +215,13 @@ class Enemy(GameObject):
         if self.y > player_pos[1]:
             self.y -= self.speed * dt
 
-    def hit(self):
-        self.hit_count += 1
+    def hit_projectile(self):
+        self.health -= PROJECTILE_DAMAGE
+        self.hit_timer = 30
+        self.color = RED
+    
+    def hit_laser(self):
+        self.health -= LASER_DAMAGE
         self.hit_timer = 30
         self.color = RED
 
@@ -281,7 +304,7 @@ class LaserBeam(GameObject):
 
         d = math.sqrt(ex**2 + ey**2)
 
-        if d < 20:
+        if d < ENEMY_SIZE:
             return True
         return False
 
