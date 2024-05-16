@@ -14,7 +14,6 @@ height = 0
 screen = None
 
 if BORDERLESS_FULLSCREEN:
-    # Set up the game window
     info = pygame.display.Info()
     width = info.current_w
     height = info.current_h
@@ -41,6 +40,8 @@ font = pygame.font.Font(None, 36)
 # Define size constants
 PLAYER_SIZE = 100
 ENEMY_SIZE = 100
+LASER_BEAM_SIZE = 2
+LASER_FADE_DURATION = 0.5
 
 
 class GameObject:
@@ -93,7 +94,12 @@ class Player(GameObject):
             size,
             color,
             speed,
-            frame_images=["resources/player1.png", "resources/player2.png", "resources/player3.png", "resources/player2.png"],
+            frame_images=[
+                "resources/player1.png",
+                "resources/player2.png",
+                "resources/player3.png",
+                "resources/player2.png",
+            ],
         )
         self.name = str(name) if name else ""
         self.has_laser_beam = False
@@ -326,13 +332,9 @@ class LaserBeam(GameObject):
     def __init__(self, x, y, size, color, speed, angle, fade_duration):
         super().__init__(x, y, size, color, speed)
         self.angle = angle
-        self.fade_duration = (
-            fade_duration * 1000
-        )  # Convert fade_duration to milliseconds
+        self.fade_duration = fade_duration * 1000
         self.fade_timer = 0
-        self.spawn_time = (
-            pygame.time.get_ticks()
-        )  # Get the current time in milliseconds
+        self.spawn_time = pygame.time.get_ticks()
         self.start_point = (x, y)
         self.end_point = (x + math.cos(angle) * 1000, y + math.sin(angle) * 1000)
 
@@ -660,13 +662,20 @@ class Game(ConnectionListener):
         game_state = data["data"]
 
         server_player_names = set(p["name"] for p in game_state["players"])
-        self.players = {name: player for name, player in self.players.items() if name in server_player_names}
+        self.players = {
+            name: player
+            for name, player in self.players.items()
+            if name in server_player_names
+        }
         for p in game_state["players"]:
             if self.players.get(p["name"]) is None:
-                self.players[p["name"]] = Player(p["x"], p["y"], PLAYER_SIZE, RED, 300, p["name"], Money())
+                self.players[p["name"]] = Player(
+                    p["x"], p["y"], PLAYER_SIZE, RED, 300, p["name"], Money()
+                )
             player = self.players[p["name"]]
             player.x = p["x"]
             player.y = p["y"]
+
         self.enemy.x = game_state["enemy"]["x"]
         self.enemy.y = game_state["enemy"]["y"]
         self.enemy.color = tuple(game_state["enemy"]["color"])
@@ -675,9 +684,16 @@ class Game(ConnectionListener):
             for p in game_state["projectiles"]
             if p["name"] != self.player.name
         ]
+
         self.laser_beams = [
             LaserBeam(
-                tuple(lb["start_point"]), tuple(lb["end_point"]), tuple(lb["color"])
+                lb["start_point"][0],
+                lb["start_point"][1],
+                LASER_BEAM_SIZE,
+                RED,
+                0,
+                lb["angle"],
+                LASER_FADE_DURATION
             )
             for lb in game_state["laser_beams"]
         ]
@@ -770,17 +786,14 @@ class Game(ConnectionListener):
                             angle = math.atan2(
                                 mouse_pos[1] - height // 2, mouse_pos[0] - width // 2
                             )
-                            fade_duration = (
-                                0.5  # Set the desired fade duration in seconds
-                            )
                             laser_beam = LaserBeam(
                                 self.player.x,
                                 self.player.y,
-                                2,
+                                LASER_BEAM_SIZE,
                                 RED,
                                 0,
                                 angle,
-                                fade_duration,
+                                LASER_FADE_DURATION,
                             )
                             self.laser_beams.append(laser_beam)
                             connection.Send(
@@ -893,8 +906,14 @@ class Game(ConnectionListener):
                 text = self.font.render(f"Cash: ${self.money.amount}", True, (0, 0, 0))
                 text_rect = text.get_rect(center=(width - 75, 220))
 
-                coordinate_text = self.font.render(f"X: {int(self.player.x)//10}, Y: {int(self.player.y)//10}", True, (0, 0, 0))
-                coordinate_text_rect = coordinate_text.get_rect(center=(width - 100, 260))
+                coordinate_text = self.font.render(
+                    f"X: {int(self.player.x)//10}, Y: {int(self.player.y)//10}",
+                    True,
+                    (0, 0, 0),
+                )
+                coordinate_text_rect = coordinate_text.get_rect(
+                    center=(width - 100, 260)
+                )
                 screen.blit(coordinate_text, coordinate_text_rect)
 
                 self.chat_box.draw(screen)

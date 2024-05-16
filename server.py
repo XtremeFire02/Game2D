@@ -138,8 +138,7 @@ class GameServer(Server):
             "laser_beams": [
                 {
                     "start_point": laser_beam.start_point,
-                    "end_point": laser_beam.end_point,
-                    "color": laser_beam.color,
+                    "angle": laser_beam.angle,
                 }
                 for laser_beam in self.laser_beams
             ],
